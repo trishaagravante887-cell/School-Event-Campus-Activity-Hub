@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Hub - School Events & Activity Portal</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col font-sans text-slate-800 bg-slate-50 antialiased selection:bg-brand-500 selection:text-white">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Navigation Header -->
+    <header class="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 gap-4">
+                
+                <!-- Logo & Brand -->
+                <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('catalog')">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+                        <i class="fa-solid fa-graduation-cap text-lg"></i>
+                    </div>
+                    <div>
+                        <span class="text-xl font-bold bg-gradient-to-r from-brand-700 to-indigo-600 bg-clip-text text-transparent">CampusHub</span>
+                        <span class="hidden sm:inline-block text-xs text-slate-500 block -mt-1 font-medium">Activity Portal</span>
+                    </div>
+                </div>
+
+                <!-- Desktop Search Bar -->
+                <div class="hidden md:flex flex-1 max-w-md mx-4">
+                    <div class="relative w-full">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                        <input type="text" id="global-search" oninput="handleSearch(this.value)" placeholder="Search events, venues, keywords..." class="w-full pl-10 pr-4 py-2 bg-slate-100 text-slate-700 placeholder-slate-400 rounded-xl text-sm border border-transparent focus:border-brand-500 focus:bg-white focus:outline-none transition-all">
+                    </div>
+                </div>
+
+                <!-- Nav Buttons -->
+                <nav class="flex items-center gap-1 sm:gap-2">
+                    <button onclick="switchTab('catalog')" id="nav-catalog" class="nav-btn px-3.5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-colors text-brand-600 bg-brand-50">
+                        <i class="fa-solid fa-compass"></i>
+                        <span class="hidden sm:inline">Explore Events</span>
+                    </button>
+                    
+                    <button onclick="switchTab('my-registrations')" id="nav-my-registrations" class="nav-btn px-3.5 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:text-brand-600 hover:bg-slate-100 flex items-center gap-2 transition-colors relative">
+                        <i class="fa-solid fa-ticket"></i>
+                        <span class="hidden sm:inline">My Passes</span>
+                        <span id="reg-badge" class="hidden bg-brand-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">0</span>
+                    </button>
+
+                    <button onclick="openSubmitModal()" class="ml-2 px-4 py-2 rounded-xl text-sm font-semibold bg-brand-600 hover:bg-brand-700 text-white shadow-md shadow-brand-500/20 transition-all flex items-center gap-2 active:scale-95">
+                        <i class="fa-solid fa-plus text-xs"></i>
+                        <span class="hidden sm:inline">Submit Event</span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Mobile Search Bar -->
+            <div class="pb-3 md:hidden">
+                <div class="relative w-full">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input type="text" id="global-search-mobile" oninput="handleSearch(this.value)" placeholder="Search events..." class="w-full pl-10 pr-4 py-2 bg-slate-100 text-slate-700 placeholder-slate-400 rounded-xl text-sm border border-transparent focus:border-brand-500 focus:bg-white focus:outline-none transition-all">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- TAB 1: CATALOG VIEW -->
+        <section id="tab-catalog" class="space-y-6">
+            
+            <!-- Hero Banner -->
+            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-900 via-indigo-900 to-slate-900 text-white p-8 sm:p-10 shadow-xl">
+                <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-brand-500/20 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="relative z-10 max-w-2xl space-y-3">
+                    <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-white/10 backdrop-blur-md border border-white/20 text-brand-100">
+                        🎓 Academic Year 2026 Activity Portal
+                    </span>
+                    <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Discover & Participate in Campus Events</h1>
+                    <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+                        Stay connected with school activities, tech summits, sports tournaments, and cultural fests. Register with one click and get your instant digital entry pass.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Filter Bar & Category Chips -->
+            <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                
+                <!-- Category Buttons -->
+                <div class="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 custom-scrollbar">
+                    <button onclick="filterCategory('All')" class="cat-btn active px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap bg-brand-600 text-white transition-all">
+                        All Events
+                    </button>
+                    <button onclick="filterCategory('Sports')" class="cat-btn px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">
+                        🏆 Sports
+                    </button>
+                    <button onclick="filterCategory('Cultural')" class="cat-btn px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">
+                        🎭 Cultural
+                    </button>
+                    <button onclick="filterCategory('Tech')" class="cat-btn px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">
+                        💻 Tech & Innovation
+                    </button>
+                    <button onclick="filterCategory('Workshop')" class="cat-btn px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">
+                        🎨 Workshops
+                    </button>
+                </div>
+
+                <!-- Event Count Indicator -->
+                <div id="catalog-count" class="text-xs font-semibold text-slate-400 whitespace-nowrap px-1">
+                    Showing 0 Events
+                </div>
+            </div>
+
+            <!-- Event Grid -->
+            <div id="events-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Dynamic Content Injected via JS -->
+            </div>
+
+            <!-- Empty State for Search/Filter -->
+            <div id="empty-state" class="hidden text-center py-16 bg-white rounded-2xl border border-slate-200">
+                <div class="w-16 h-16 mx-auto mb-4 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center text-2xl">
+                    <i class="fa-solid fa-calendar-xmark"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800">No events found</h3>
+                <p class="text-sm text-slate-500 max-w-sm mx-auto mt-1">Try adjusting your search criteria or category filter to discover other campus activities.</p>
+                <button onclick="resetFilters()" class="mt-4 px-4 py-2 bg-brand-50 text-brand-600 rounded-xl text-sm font-semibold hover:bg-brand-100 transition-colors">Reset Filters</button>
+            </div>
+        </section>
+
+        <!-- TAB 2: MY REGISTRATIONS VIEW -->
+        <section id="tab-my-registrations" class="hidden space-y-6">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900">My Registered Passes</h2>
+                    <p class="text-sm text-slate-500">View and manage your active campus event registrations and entry passes.</p>
+                </div>
+            </div>
+
+            <!-- Registrations Grid -->
+            <div id="my-registrations-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Dynamic Passes Injected via JS -->
+            </div>
+
+            <!-- Empty Registrations State -->
+            <div id="empty-registrations" class="hidden text-center py-16 bg-white rounded-2xl border border-slate-200">
+                <div class="w-16 h-16 mx-auto mb-4 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center text-2xl">
+                    <i class="fa-solid fa-ticket"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800">No Active Event Passes</h3>
+                <p class="text-sm text-slate-500 max-w-sm mx-auto mt-1">You haven't registered for any campus events yet. Explore upcoming activities and sign up today!</p>
+                <button onclick="switchTab('catalog')" class="mt-4 px-5 py-2.5 bg-brand-600 text-white rounded-xl text-sm font-semibold hover:bg-brand-700 transition-all shadow-md">Browse Events</button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto border-t border-slate-200 bg-white py-6">
+        <div class="max-w-7xl mx-auto px-4 text-center sm:flex sm:justify-between sm:text-left text-xs text-slate-500">
+            <p>&copy; 2026 Campus Activity Hub — Department of Student Affairs.</p>
+            <p class="mt-2 sm:mt-0">Built for Application Development & Emerging Technologies</p>
+        </div>
+    </footer>
+
+    <!-- MODAL 1: EVENT DETAIL & RSVP MODAL -->
+    <div id="event-detail-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-200">
+        <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl custom-scrollbar border border-slate-100 flex flex-col transform scale-95 transition-transform duration-200" id="detail-modal-card">
+            
+            <!-- Modal Header Image -->
+            <div class="relative h-48 sm:h-60 w-full overflow-hidden bg-slate-800">
+                <img id="modal-event-img" src="" alt="Event Header" class="w-full h-full object-cover opacity-90">
+                <button onclick="closeDetailModal()" class="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-md transition-all">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+                <span id="modal-event-category" class="absolute bottom-4 left-4 px-3 py-1 bg-brand-600 text-white text-xs font-bold rounded-full shadow-lg">
+                    Category
+                </span>
+            </div>
+
+            <!-- Modal Content Body -->
+            <div class="p-6 sm:p-8 space-y-6 flex-1">
+                <div>
+                    <h2 id="modal-event-title" class="text-2xl font-extrabold text-slate-900 leading-tight">Event Title</h2>
+                    <div class="mt-3 flex flex-wrap gap-4 text-xs font-medium text-slate-600">
+                        <div class="flex items-center gap-1.5"><i class="fa-regular fa-calendar text-brand-600"></i> <span id="modal-event-date">Date</span></div>
+                        <div class="flex items-center gap-1.5"><i class="fa-regular fa-clock text-brand-600"></i> <span id="modal-event-time">Time</span></div>
+                        <div class="flex items-center gap-1.5"><i class="fa-solid fa-location-dot text-brand-600"></i> <span id="modal-event-venue">Venue</span></div>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-100 pt-4">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">About This Event</h4>
+                    <p id="modal-event-desc" class="text-sm text-slate-600 leading-relaxed">Description goes here...</p>
+                </div>
+
+                <!-- Event Details Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <div>
+                        <span class="block text-[11px] font-semibold text-slate-400 uppercase">Organized By</span>
+                        <span id="modal-event-organizer" class="text-sm font-bold text-slate-700">Student Council</span>
+                    </div>
+                    <div>
+                        <span class="block text-[11px] font-semibold text-slate-400 uppercase">Venue Map Preview</span>
+                        <span id="modal-event-map-text" class="text-sm font-bold text-slate-700">Main Campus Quadrangle</span>
+                    </div>
+                </div>
+
+                <!-- RSVP Registration Form Section -->
+                <div class="border-t border-slate-100 pt-6">
+                    <h3 class="text-lg font-bold text-slate-900 mb-1">Event RSVP & Registration</h3>
+                    <p class="text-xs text-slate-500 mb-4">Complete the fields below to secure your spot and generate your student digital pass.</p>
+
+                    <form id="rsvp-form" onsubmit="submitRegistration(event)" class="space-y-4">
+                        <input type="hidden" id="rsvp-event-id">
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Full Name *</label>
+                                <input type="text" id="rsvp-name" required placeholder="e.g. Juan Cruz" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-brand-500 focus:outline-none transition-colors">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Student ID Number *</label>
+                                <input type="text" id="rsvp-student-id" required placeholder="e.g. 2026-0912" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-brand-500 focus:outline-none transition-colors">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Email Address *</label>
+                                <input type="email" id="rsvp-email" required placeholder="student@university.edu.ph" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-brand-500 focus:outline-none transition-colors">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Department / Year & Section *</label>
+                                <input type="text" id="rsvp-dept" required placeholder="e.g. BSIT 3-A" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-brand-500 focus:outline-none transition-colors">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Special Requirements / Notes (Optional)</label>
+                            <input type="text" id="rsvp-notes" placeholder="Dietary restrictions, accessibility requests..." class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-brand-500 focus:outline-none transition-colors">
+                        </div>
+
+                        <div class="pt-2 flex justify-end gap-3">
+                            <button type="button" onclick="closeDetailModal()" class="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors">Cancel</button>
+                            <button type="submit" class="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm rounded-xl shadow-md shadow-brand-500/20 transition-all flex items-center gap-2">
+                                <i class="fa-solid fa-check text-xs"></i> Complete RSVP
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: DYNAMIC PASS MODAL -->
+    <div id="pass-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-200">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 transform scale-95 transition-transform duration-200 text-center space-y-6" id="pass-modal-card">
+            
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-2 text-brand-600 font-bold text-sm">
+                    <i class="fa-solid fa-circle-check"></i> Registration Confirmed
+                </div>
+                <button onclick="closePassModal()" class="text-slate-400 hover:text-slate-600 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Ticket / Pass Graphic Container -->
+            <div id="printable-pass" class="bg-gradient-to-b from-slate-900 to-indigo-950 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden text-left border border-indigo-800">
+                <!-- Decorative Circle Cutouts -->
+                <div class="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-white rounded-full"></div>
+                <div class="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-white rounded-full"></div>
+
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-[10px] font-mono tracking-widest uppercase bg-brand-500/30 text-brand-200 px-2 py-0.5 rounded border border-brand-400/30">Official Pass</span>
+                    <span id="pass-reg-id" class="text-xs font-mono font-bold text-indigo-300">#HUB-8921</span>
+                </div>
+
+                <h3 id="pass-event-title" class="text-lg font-extrabold text-white leading-snug mb-1">Event Title</h3>
+                <p id="pass-event-date" class="text-xs text-indigo-200 mb-4"><i class="fa-regular fa-calendar mr-1"></i> Date Here</p>
+
+                <div class="border-t border-dashed border-indigo-800/80 my-4"></div>
+
+                <div class="grid grid-cols-2 gap-2 text-xs mb-4">
+                    <div>
+                        <span class="block text-[10px] text-slate-400 uppercase">Attendee</span>
+                        <span id="pass-attendee-name" class="font-bold text-slate-100 block truncate">Student Name</span>
+                    </div>
+                    <div>
+                        <span class="block text-[10px] text-slate-400 uppercase">Student ID</span>
+                        <span id="pass-student-id" class="font-bold text-slate-100 block">2026-0000</span>
+                    </div>
+                </div>
+
+                <!-- QR Code & Details -->
+                <div class="flex items-center justify-between pt-2">
+                    <div>
+                        <span class="block text-[10px] text-slate-400 uppercase">Venue</span>
+                        <span id="pass-venue" class="text-xs font-semibold text-slate-200 block truncate max-w-[150px]">Main Gym</span>
+                    </div>
+                    <div class="bg-white p-2 rounded-xl shadow-inner">
+                        <img id="pass-qr-img" src="" alt="Pass QR Code" class="w-16 h-16">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-3">
+                <button onclick="simulateDownloadPass()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-xl transition-colors flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-download text-xs"></i> Download Pass
+                </button>
+                <button onclick="closePassModal()" class="flex-1 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-md shadow-brand-500/20">
+                    Done
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: SUBMIT EVENT MODAL -->
+    <div id="submit-event-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-200">
+        <div class="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 transform scale-95 transition-transform duration-200 max-h-[90vh] overflow-y-auto custom-scrollbar" id="submit-modal-card">
+            
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-900">Submit Campus Event Proposal</h3>
+                    <p class="text-xs text-slate-500">Organizers and student leaders can propose new activities here.</p>
+                </div>
+                <button onclick="closeSubmitModal()" class="text-slate-400 hover:text-slate-600 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="create-event-form" onsubmit="submitNewEvent(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Event Title *</label>
+                    <input type="text" id="new-title" required placeholder="e.g. Annual Hackathon 2026" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-brand-500 focus:outline-none transition-colors">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Category *</label>
+                        <select id="new-category" required class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-brand-500 focus:outline-none transition-colors">
+                            <option value="Sports">Sports</option>
+                            <option value="Cultural">Cultural</option>
+                            <option value="Tech">Tech & Innovation</option>
+                            <option value="Workshop">Workshop</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Organizing Body *</label>
+                        <input type="text" id="new-organizer" required placeholder="e.g. Computer Society" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-brand-500 focus:outline-none transition-colors">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Date *</label>
+                        <input type="date" id="new-date" required class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-brand-500 focus:outline-none transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Time *</label>
+                        <input type="text" id="new-time" required placeholder="e.g. 9:00 AM - 4:00 PM" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-brand-500 focus:outline-none transition-colors">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Venue / Location *</label>
+                    <input type="text" id="new-venue" required placeholder="e.g. Audio Visual Room 1" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-brand-500 focus:outline-none transition-colors">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Event Banner Image URL (Optional)</label>
+                    <input type="url" id="new-image" placeholder="https://images.unsplash.com/..." class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-brand-500 focus:outline-none transition-colors">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Short Description *</label>
+                    <textarea id="new-desc" required rows="3" placeholder="Provide event details, objectives, and highlights..." class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-brand-500 focus:outline-none transition-colors"></textarea>
+                </div>
+
+                <div class="pt-3 flex justify-end gap-3">
+                    <button type="button" onclick="closeSubmitModal()" class="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors">Cancel</button>
+                    <button type="submit" class="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm rounded-xl shadow-md shadow-brand-500/20 transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-paper-plane text-xs"></i> Submit Event
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // Initial Mock Events Data
+        const INITIAL_EVENTS = [
+            {
+                id: "evt-1",
+                title: "University Sportsfest 2026: Intramurals",
+                category: "Sports",
+                date: "Nov 12, 2026",
+                time: "8:00 AM - 5:00 PM",
+                venue: "University Athletics Complex",
+                organizer: "Supreme Student Council & PE Dept",
+                image: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=800&q=80",
+                description: "Gear up for the biggest sports battle of the year! Cheer for your department in basketball, volleyball, track and field, and esports tournaments."
+            },
+            {
+                id: "evt-2",
+                title: "Tech & Innovation Summit 2026",
+                category: "Tech",
+                date: "Nov 18, 2026",
+                time: "9:00 AM - 4:00 PM",
+                venue: "College Auditorium & AVR",
+                organizer: "Junior Computer Society",
+                image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=800&q=80",
+                description: "Explore AI advancements, cyber security trends, and web engineering. Features keynote talks from industry tech leaders and student project showcases."
+            },
+            {
+                id: "evt-3",
+                title: "Buwan ng Wika Cultural Gala",
+                category: "Cultural",
+                date: "Nov 24, 2026",
+                time: "1:00 PM - 7:00 PM",
+                venue: "Grand Campus Pavilion",
+                organizer: "Cultural Arts Guild",
+                image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80",
+                description: "A vibrant celebration of Filipino heritage, featuring traditional dance showcases, theatrical plays, music performances, and local food stalls."
+            },
+            {
+                id: "evt-4",
+                title: "Digital Photography & Visual Arts Workshop",
+                category: "Workshop",
+                date: "Dec 02, 2026",
+                time: "10:00 AM - 3:00 PM",
+                venue: "Media Center Lab 3",
+                organizer: "University Press & Media Guild",
+                image: "https://images.unsplash.com/photo-1452587925148-ce544e77e70d?auto=format&fit=crop&w=800&q=80",
+                description: "Hands-on photo composition and visual storytelling workshop. Learn camera settings, lighting techniques, and photo editing software tips."
+            },
+            {
+                id: "evt-5",
+                title: "Campus Leadership & Youth Empowerment Seminar",
+                category: "Workshop",
+                date: "Dec 10, 2026",
+                time: "1:30 PM - 5:00 PM",
+                venue: "Student Center Function Hall",
+                organizer: "Office of Student Affairs",
+                image: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&w=800&q=80",
+                description: "Enhance your project management, team communication, and leadership capabilities with practical team building activities and guest lectures."
+            }
+        ];
+
+        // Global State variables
+        let eventsList = [];
+        let registrations = [];
+        let currentCategory = 'All';
+        let searchQuery = '';
+
+        // Window Load Initialization
+        window.onload = function() {
+            loadInitialData();
+            renderCatalog();
+            updateRegistrationsBadge();
+        };
+
+        // Load or initialize LocalStorage Data
+        function loadInitialData() {
+            const storedEvents = localStorage.getItem('campus_events');
+            if (storedEvents) {
+                eventsList = JSON.parse(storedEvents);
+            } else {
+                eventsList = INITIAL_EVENTS;
+                localStorage.setItem('campus_events', JSON.stringify(eventsList));
+            }
+
+            const storedRegs = localStorage.getItem('campus_registrations');
+            if (storedRegs) {
+                registrations = JSON.parse(storedRegs);
+            } else {
+                registrations = [];
+            }
+        }
+
+        // Render Events Grid
+        function renderCatalog() {
+            const grid = document.getElementById('events-grid');
+            const emptyState = document.getElementById('empty-state');
+            grid.innerHTML = '';
+
+            const filtered = eventsList.filter(evt => {
+                const matchesCat = (currentCategory === 'All') || (evt.category === currentCategory);
+                const matchesSearch = evt.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                      evt.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                      evt.venue.toLowerCase().includes(searchQuery.toLowerCase());
+                return matchesCat && matchesSearch;
+            });
+
+            document.getElementById('catalog-count').innerText = `Showing ${filtered.length} Event${filtered.length !== 1 ? 's' : ''}`;
+
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            filtered.forEach(evt => {
+                const isRegistered = registrations.some(r => r.eventId === evt.id);
+
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-lg transition-all duration-200 flex flex-col group";
+                
+                card.innerHTML = `
+                    <div class="relative h-44 overflow-hidden bg-slate-100">
+                        <img src="${evt.image}" alt="${evt.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.src='https://placehold.co/600x400/e2e8f0/475569?text=Campus+Event'">
+                        <span class="absolute top-3 left-3 px-2.5 py-1 bg-white/90 backdrop-blur-md text-brand-700 text-[11px] font-bold rounded-lg shadow-sm border border-white/40">
+                            ${evt.category}
+                        </span>
+                        ${isRegistered ? `
+                            <span class="absolute top-3 right-3 px-2.5 py-1 bg-emerald-500 text-white text-[10px] font-bold rounded-lg shadow-sm flex items-center gap-1">
+                                <i class="fa-solid fa-circle-check"></i> Registered
+                            </span>
+                        ` : ''}
+                    </div>
+
+                    <div class="p-5 flex-1 flex flex-col justify-between space-y-4">
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-2 text-xs font-semibold text-brand-600">
+                                <i class="fa-regular fa-calendar"></i> ${evt.date} &bull; ${evt.time}
+                            </div>
+                            <h3 class="text-base font-bold text-slate-900 line-clamp-2 leading-snug group-hover:text-brand-600 transition-colors">${evt.title}</h3>
+                            <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed">${evt.description}</p>
+                        </div>
+
+                        <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+                            <span class="text-[11px] text-slate-400 truncate max-w-[140px] font-medium">
+                                <i class="fa-solid fa-location-dot text-slate-400 mr-1"></i> ${evt.venue}
+                            </span>
+                            <button onclick="openDetailModal('${evt.id}')" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-brand-600 hover:text-white text-slate-700 transition-colors flex items-center gap-1.5">
+                                ${isRegistered ? 'View Pass' : 'RSVP Now'} <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Render My Registrations Tab
+        function renderRegistrations() {
+            const grid = document.getElementById('my-registrations-grid');
+            const emptyState = document.getElementById('empty-registrations');
+            grid.innerHTML = '';
+
+            if (registrations.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            registrations.forEach(reg => {
+                const evt = eventsList.find(e => e.id === reg.eventId) || {
+                    title: reg.eventTitle,
+                    date: reg.eventDate,
+                    venue: reg.eventVenue,
+                    image: 'https://placehold.co/600x400/e2e8f0/475569?text=Event'
+                };
+
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4 relative overflow-hidden flex flex-col justify-between";
+                
+                card.innerHTML = `
+                    <div class="flex gap-4 items-start">
+                        <img src="${evt.image}" class="w-16 h-16 rounded-xl object-cover bg-slate-100 flex-shrink-0" onerror="this.src='https://placehold.co/100x100?text=Pass'">
+                        <div class="flex-1 min-w-0">
+                            <span class="text-[10px] font-mono font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded">ID: ${reg.regId}</span>
+                            <h4 class="font-bold text-sm text-slate-900 truncate mt-1">${evt.title}</h4>
+                            <p class="text-xs text-slate-500 truncate mt-0.5"><i class="fa-regular fa-calendar mr-1"></i> ${evt.date}</p>
+                            <p class="text-xs text-slate-500 truncate"><i class="fa-solid fa-location-dot mr-1"></i> ${evt.venue}</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs space-y-1">
+                        <div class="flex justify-between"><span class="text-slate-400">Attendee:</span> <span class="font-semibold text-slate-700">${reg.studentName}</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">Student ID:</span> <span class="font-semibold text-slate-700">${reg.studentId}</span></div>
+                    </div>
+
+                    <div class="flex gap-2 pt-2">
+                        <button onclick="viewPassModalDirect('${reg.regId}')" class="flex-1 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-qrcode"></i> View Pass
+                        </button>
+                        <button onclick="cancelRegistration('${reg.regId}')" class="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold transition-colors" title="Cancel Registration">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Search & Filter Event Handlers
+        function handleSearch(val) {
+            searchQuery = val;
+            renderCatalog();
+        }
+
+        function filterCategory(cat) {
+            currentCategory = cat;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                if (btn.innerText.includes(cat) || (cat === 'All' && btn.innerText.includes('All'))) {
+                    btn.className = "cat-btn active px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap bg-brand-600 text-white transition-all shadow-sm";
+                } else {
+                    btn.className = "cat-btn px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all";
+                }
+            });
+            renderCatalog();
+        }
+
+        function resetFilters() {
+            searchQuery = '';
+            document.getElementById('global-search').value = '';
+            document.getElementById('global-search-mobile').value = '';
+            filterCategory('All');
+        }
+
+        // Tab Switching Logic
+        function switchTab(tab) {
+            document.getElementById('tab-catalog').classList.add('hidden');
+            document.getElementById('tab-my-registrations').classList.add('hidden');
+
+            document.getElementById('nav-catalog').className = "nav-btn px-3.5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-colors text-slate-600 hover:text-brand-600 hover:bg-slate-100";
+            document.getElementById('nav-my-registrations').className = "nav-btn px-3.5 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:text-brand-600 hover:bg-slate-100 flex items-center gap-2 transition-colors relative";
+
+            if (tab === 'catalog') {
+                document.getElementById('tab-catalog').classList.remove('hidden');
+                document.getElementById('nav-catalog').className = "nav-btn px-3.5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-colors text-brand-600 bg-brand-50";
+                renderCatalog();
+            } else if (tab === 'my-registrations') {
+                document.getElementById('tab-my-registrations').classList.remove('hidden');
+                document.getElementById('nav-my-registrations').className = "nav-btn px-3.5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-colors text-brand-600 bg-brand-50 relative";
+                renderRegistrations();
+            }
+        }
+
+        function updateRegistrationsBadge() {
+            const badge = document.getElementById('reg-badge');
+            if (registrations.length > 0) {
+                badge.innerText = registrations.length;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        // Open & Setup Event Detail Modal
+        function openDetailModal(id) {
+            const evt = eventsList.find(e => e.id === id);
+            if (!evt) return;
+
+            document.getElementById('rsvp-event-id').value = evt.id;
+            document.getElementById('modal-event-img').src = evt.image;
+            document.getElementById('modal-event-title').innerText = evt.title;
+            document.getElementById('modal-event-category').innerText = evt.category;
+            document.getElementById('modal-event-date').innerText = evt.date;
+            document.getElementById('modal-event-time').innerText = evt.time;
+            document.getElementById('modal-event-venue').innerText = evt.venue;
+            document.getElementById('modal-event-organizer').innerText = evt.organizer;
+            document.getElementById('modal-event-map-text').innerText = evt.venue;
+            document.getElementById('modal-event-desc').innerText = evt.description;
+
+            // Check if user is already registered to pre-fill info
+            const existing = registrations.find(r => r.eventId === id);
+            if (existing) {
+                document.getElementById('rsvp-name').value = existing.studentName;
+                document.getElementById('rsvp-student-id').value = existing.studentId;
+                document.getElementById('rsvp-email').value = existing.email;
+                document.getElementById('rsvp-dept').value = existing.dept;
+            }
+
+            const modal = document.getElementById('event-detail-modal');
+            const card = document.getElementById('detail-modal-card');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            card.classList.remove('scale-95');
+            card.classList.add('scale-100');
+        }
+
+        function closeDetailModal() {
+            const modal = document.getElementById('event-detail-modal');
+            const card = document.getElementById('detail-modal-card');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            card.classList.remove('scale-100');
+            card.classList.add('scale-95');
+        }
+
+        // Submit RSVP Form Logic
+        function submitRegistration(e) {
+            e.preventDefault();
+            const eventId = document.getElementById('rsvp-event-id').value;
+            const evt = eventsList.find(e => e.id === eventId);
+
+            const studentName = document.getElementById('rsvp-name').value;
+            const studentId = document.getElementById('rsvp-student-id').value;
+            const email = document.getElementById('rsvp-email').value;
+            const dept = document.getElementById('rsvp-dept').value;
+
+            // Remove previous reg for this event if re-submitting
+            registrations = registrations.filter(r => r.eventId !== eventId);
+
+            const regId = 'HUB-' + Math.floor(1000 + Math.random() * 9000);
+            const newReg = {
+                regId,
+                eventId,
+                eventTitle: evt.title,
+                eventDate: evt.date,
+                eventVenue: evt.venue,
+                studentName,
+                studentId,
+                email,
+                dept,
+                registeredAt: new Date().toISOString()
+            };
+
+            registrations.push(newReg);
+            localStorage.setItem('campus_registrations', JSON.stringify(registrations));
+
+            updateRegistrationsBadge();
+            closeDetailModal();
+            renderCatalog();
+            showToast('Registration successful! Pass generated.', 'success');
+
+            // Open Pass Display Modal
+            setTimeout(() => {
+                displayPassModal(newReg, evt);
+            }, 300);
+        }
+
+        // Display Generated Digital Pass Modal
+        function displayPassModal(reg, evt) {
+            document.getElementById('pass-reg-id').innerText = `#${reg.regId}`;
+            document.getElementById('pass-event-title').innerText = evt.title;
+            document.getElementById('pass-event-date').innerText = `${evt.date} • ${evt.time}`;
+            document.getElementById('pass-attendee-name').innerText = reg.studentName;
+            document.getElementById('pass-student-id').innerText = reg.studentId;
+            document.getElementById('pass-venue').innerText = evt.venue;
+
+            // Generate Dynamic QR Code image placeholder via API
+            const qrData = encodeURIComponent(`CAMPUS-HUB:${reg.regId}:${reg.studentId}`);
+            document.getElementById('pass-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${qrData}`;
+
+            const modal = document.getElementById('pass-modal');
+            const card = document.getElementById('pass-modal-card');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            card.classList.remove('scale-95');
+            card.classList.add('scale-100');
+        }
+
+        function viewPassModalDirect(regId) {
+            const reg = registrations.find(r => r.regId === regId);
+            if (!reg) return;
+            const evt = eventsList.find(e => e.id === reg.eventId) || {
+                title: reg.eventTitle,
+                date: reg.eventDate,
+                time: 'Scheduled Time',
+                venue: reg.eventVenue
+            };
+            displayPassModal(reg, evt);
+        }
+
+        function closePassModal() {
+            const modal = document.getElementById('pass-modal');
+            const card = document.getElementById('pass-modal-card');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            card.classList.remove('scale-100');
+            card.classList.add('scale-95');
+        }
+
+        // Cancel Registration
+        function cancelRegistration(regId) {
+            if (confirm("Are you sure you want to cancel this event registration pass?")) {
+                registrations = registrations.filter(r => r.regId !== regId);
+                localStorage.setItem('campus_registrations', JSON.stringify(registrations));
+                updateRegistrationsBadge();
+                renderRegistrations();
+                renderCatalog();
+                showToast('Event registration canceled', 'info');
+            }
+        }
+
+        // Submit New Event Proposal Modal
+        function openSubmitModal() {
+            const modal = document.getElementById('submit-event-modal');
+            const card = document.getElementById('submit-modal-card');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            card.classList.remove('scale-95');
+            card.classList.add('scale-100');
+        }
+
+        function closeSubmitModal() {
+            const modal = document.getElementById('submit-event-modal');
+            const card = document.getElementById('submit-modal-card');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            card.classList.remove('scale-100');
+            card.classList.add('scale-95');
+        }
+
+        function submitNewEvent(e) {
+            e.preventDefault();
+            const title = document.getElementById('new-title').value;
+            const category = document.getElementById('new-category').value;
+            const organizer = document.getElementById('new-organizer').value;
+            const rawDate = document.getElementById('new-date').value;
+            const time = document.getElementById('new-time').value;
+            const venue = document.getElementById('new-venue').value;
+            let image = document.getElementById('new-image').value;
+            const description = document.getElementById('new-desc').value;
+
+            // Format date string
+            const dateObj = new Date(rawDate);
+            const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+            if (!image) {
+                image = "https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&w=800&q=80";
+            }
+
+            const newEvt = {
+                id: "evt-" + Date.now(),
+                title,
+                category,
+                date: formattedDate,
+                time,
+                venue,
+                organizer,
+                image,
+                description
+            };
+
+            eventsList.unshift(newEvt);
+            localStorage.setItem('campus_events', JSON.stringify(eventsList));
+
+            document.getElementById('create-event-form').reset();
+            closeSubmitModal();
+            renderCatalog();
+            showToast('New event submitted successfully!', 'success');
+        }
+
+        // Simulation utilities
+        function simulateDownloadPass() {
+            showToast('Downloading Digital Pass image...', 'success');
+        }
+
+        // Toast Notification System
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            const bgColor = type === 'success' ? 'bg-slate-900 text-white' : 'bg-slate-800 text-white';
+            const icon = type === 'success' ? '<i class="fa-solid fa-circle-check text-emerald-400"></i>' : '<i class="fa-solid fa-circle-info text-indigo-400"></i>';
+
+            toast.className = `${bgColor} px-4 py-3 rounded-2xl shadow-xl text-xs font-semibold flex items-center gap-2.5 transform translate-y-4 opacity-0 transition-all duration-300 pointer-events-auto border border-slate-700`;
+            toast.innerHTML = `${icon} <span>${message}</span>`;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-4', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-4', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
